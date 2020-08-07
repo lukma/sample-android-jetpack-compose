@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity() {
                 PermissionUtilsAmbient provides permissionUtils,
                 ActivityResultHandlerAmbient provides activityResultHandler
             ) {
+                MainContent()
             }
         }
     }
