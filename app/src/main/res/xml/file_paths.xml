@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-media-path
+        name="media"
+        path="@{string/app_name}/" />
+    <files-path
+        name="files"
+        path="." />
+    <external-path
+        name="my_images"
+        path="/" />
+</paths>

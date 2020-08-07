@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Clean</string>
+
+    <string name="warning_need_permission">This application need granted permission</string>
+    <string name="warning_need_go_to_settings">Go to settings and enable permissions</string>
+
+    <string name="error_default">Something wrong…</string>
+
+    <string name="screen_profile_title">My Profile</string>
+
+    <string name="input_username">Username</string>
+    <string name="input_password">Password</string>
+
+    <string name="button_sign_in">Sign In</string>
+    <string name="button_sign_out">Sign Out</string>
+
+    <string name="label_pick_gallery">Pick Gallery</string>
+    <string name="label_capture_photo">Capture Photo</string>
+</resources>
