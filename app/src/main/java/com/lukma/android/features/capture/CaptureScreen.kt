@@ -103,28 +103,31 @@ fun CaptureScreen() {
             backgroundColor = Color.White
         ) { }
 
-        if (cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) == true) {
-            val isBackCamera = savedInstanceState { true }
-            IconButton(onClick = {
-                isBackCamera.value = !isBackCamera.value
-
-                lensFacing = if (isBackCamera.value) {
-                    CameraSelector.LENS_FACING_BACK
-                } else {
-                    CameraSelector.LENS_FACING_FRONT
-                }
-
-                setUpCamera(lifecycleOwner)
-            }, modifier = Modifier.constrainAs(flipButton) {
-                bottom.linkTo(captureButton.bottom)
-                end.linkTo(captureButton.start, margin = 8.dp)
-                top.linkTo(captureButton.top)
-            }) {
-                Icon(
-                    asset = vectorResource(id = R.drawable.ic_twotone_flip_camera_android_24),
-                    tint = Color.White
-                )
+        val isBackCamera = savedInstanceState { true }
+        IconButton(onClick = {
+            if (!isBackCamera.value) {
+                lensFacing = CameraSelector.LENS_FACING_BACK
+                isBackCamera.value = true
+            } else if (cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) == true) {
+                lensFacing = CameraSelector.LENS_FACING_FRONT
+                isBackCamera.value = false
             }
+
+            setUpCamera(lifecycleOwner)
+        }, modifier = Modifier.constrainAs(flipButton) {
+            bottom.linkTo(captureButton.bottom)
+            end.linkTo(captureButton.start, margin = 8.dp)
+            top.linkTo(captureButton.top)
+        }) {
+            val tint = if (cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) == true) {
+                Color.White
+            } else {
+                Color.LightGray
+            }
+            Icon(
+                asset = vectorResource(id = R.drawable.ic_twotone_flip_camera_android_24),
+                tint = tint
+            )
         }
 
         val isFlashOff = savedInstanceState { true }
