@@ -76,8 +76,7 @@ private fun PostList(posts: List<Post>) {
 private fun PostItem(post: Post) {
     Card(
         modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-        shape = RoundedCornerShape(8.dp),
-        color = Color.White
+        shape = RoundedCornerShape(8.dp)
     ) {
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
             val (content, authorPhotoImage, authorNameText) = createRefs()
@@ -88,7 +87,7 @@ private fun PostItem(post: Post) {
                 start.linkTo(parent.start)
                 top.linkTo(authorNameText.bottom)
                 width = Dimension.fillToConstraints
-                height = Dimension.value(300.dp)
+                height = Dimension.value(500.dp)
             }
             when (post) {
                 is Post.Image -> Image(
