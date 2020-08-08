@@ -4,14 +4,14 @@ import android.os.Bundle
 import androidx.annotation.MainThread
 import androidx.compose.runtime.*
 import androidx.core.os.bundleOf
+import androidx.hilt.Assisted
+import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lukma.android.domain.auth.usecase.IsLoggedInUseCase
 import com.lukma.android.domain.getOrNull
 import kotlinx.coroutines.launch
-import org.koin.core.KoinComponent
-import org.koin.core.inject
 
 enum class ScreenName { LOGIN, HOME, EXPLORE, PROFILE, CAPTURE }
 
@@ -54,8 +54,10 @@ fun <T> SavedStateHandle.getMutableStateOf(
     return state
 }
 
-class NavigationViewModel(savedStateHandle: SavedStateHandle) : ViewModel(), KoinComponent {
-    private val isLoggedInUseCase by inject<IsLoggedInUseCase>()
+class NavigationViewModel @ViewModelInject constructor(
+    private val isLoggedInUseCase: IsLoggedInUseCase,
+    @Assisted savedStateHandle: SavedStateHandle
+) : ViewModel() {
 
     private var isLoggedIn = false
         set(value) {

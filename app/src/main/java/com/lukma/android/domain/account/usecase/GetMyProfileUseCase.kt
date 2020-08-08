@@ -4,9 +4,10 @@ import com.lukma.android.domain.BaseUseCase
 import com.lukma.android.domain.account.AccountRepository
 import com.lukma.android.domain.account.Profile
 import kotlinx.coroutines.Dispatchers
+import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
-class GetMyProfileUseCase(
+class GetMyProfileUseCase @Inject constructor(
     private val accountRepository: AccountRepository
 ) : BaseUseCase<Profile>() {
 

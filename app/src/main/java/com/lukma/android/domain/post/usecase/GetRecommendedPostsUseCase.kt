@@ -4,9 +4,10 @@ import com.lukma.android.domain.BaseUseCase
 import com.lukma.android.domain.post.Post
 import com.lukma.android.domain.post.PostRepository
 import kotlinx.coroutines.Dispatchers
+import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
-class GetRecommendedPostsUseCase(
+class GetRecommendedPostsUseCase @Inject constructor(
     private val postRepository: PostRepository
 ) : BaseUseCase<List<Post>>() {
 

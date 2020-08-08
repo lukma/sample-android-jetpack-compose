@@ -1,5 +1,6 @@
 package com.lukma.android.features.capture
 
+import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,11 +10,10 @@ import com.lukma.android.domain.post.usecase.CreatePostUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.koin.core.KoinComponent
-import org.koin.core.inject
 
-class CaptureViewModel : ViewModel(), KoinComponent {
-    private val createPostUseCase by inject<CreatePostUseCase>()
+class CaptureViewModel @ViewModelInject constructor(
+    private val createPostUseCase: CreatePostUseCase
+) : ViewModel() {
 
     private val createPostResultMutable = MutableLiveData<UiState<Unit>>()
     internal val createPostResult: LiveData<UiState<Unit>> = createPostResultMutable

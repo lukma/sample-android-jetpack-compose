@@ -5,9 +5,10 @@ import com.lukma.android.domain.account.AccountRepository
 import com.lukma.android.domain.post.Post
 import com.lukma.android.domain.post.PostRepository
 import kotlinx.coroutines.Dispatchers
+import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
-class UpdateMyProfileUseCase(
+class UpdateMyProfileUseCase @Inject constructor(
     private val accountRepository: AccountRepository,
     private val postRepository: PostRepository
 ) : BaseUseCase<Unit>() {

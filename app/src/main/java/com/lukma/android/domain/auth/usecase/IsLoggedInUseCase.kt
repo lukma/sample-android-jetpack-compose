@@ -3,9 +3,10 @@ package com.lukma.android.domain.auth.usecase
 import com.lukma.android.domain.BaseUseCase
 import com.lukma.android.domain.auth.AuthRepository
 import kotlinx.coroutines.Dispatchers
+import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
-class IsLoggedInUseCase(
+class IsLoggedInUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) : BaseUseCase<Boolean>() {
 

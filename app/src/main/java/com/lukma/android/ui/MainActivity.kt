@@ -10,7 +10,9 @@ import com.lukma.android.common.ActivityResultHandler
 import com.lukma.android.common.ActivityResultHandlerAmbient
 import com.lukma.android.common.PermissionUtils
 import com.lukma.android.common.PermissionUtilsAmbient
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private val navigationViewModel by viewModels<NavigationViewModel>()
     private val permissionUtils by lazy { PermissionUtils(this) }

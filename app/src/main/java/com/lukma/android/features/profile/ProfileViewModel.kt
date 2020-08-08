@@ -1,5 +1,6 @@
 package com.lukma.android.features.profile
 
+import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,13 +14,12 @@ import com.lukma.android.domain.asUiState
 import com.lukma.android.domain.getOrNull
 import com.lukma.android.domain.isSuccess
 import kotlinx.coroutines.launch
-import org.koin.core.KoinComponent
-import org.koin.core.inject
 
-class ProfileViewModel : ViewModel(), KoinComponent {
-    private val getMyProfileUseCase by inject<GetMyProfileUseCase>()
-    private val updateMyProfileUseCase by inject<UpdateMyProfileUseCase>()
-    private val signOutUseCase by inject<SignOutUseCase>()
+class ProfileViewModel @ViewModelInject constructor(
+    private val getMyProfileUseCase: GetMyProfileUseCase,
+    private val updateMyProfileUseCase: UpdateMyProfileUseCase,
+    private val signOutUseCase: SignOutUseCase
+) : ViewModel() {
 
     private val myProfileMutable = MutableLiveData<Profile>()
     internal val myProfile: LiveData<Profile> = myProfileMutable

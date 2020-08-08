@@ -3,9 +3,10 @@ package com.lukma.android.domain.account.usecase
 import com.lukma.android.domain.BaseUseCase
 import com.lukma.android.domain.account.AccountRepository
 import kotlinx.coroutines.Dispatchers
+import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
-class SignOutUseCase(
+class SignOutUseCase @Inject constructor(
     private val accountRepository: AccountRepository
 ) : BaseUseCase<Unit>() {
 

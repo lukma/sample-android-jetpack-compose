@@ -1,5 +1,6 @@
 package com.lukma.android.features.login
 
+import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,11 +9,10 @@ import com.lukma.android.common.UiState
 import com.lukma.android.domain.asUiState
 import com.lukma.android.domain.auth.usecase.SignInUseCase
 import kotlinx.coroutines.launch
-import org.koin.core.KoinComponent
-import org.koin.core.inject
 
-class LoginViewModel : ViewModel(), KoinComponent {
-    private val signInUseCase by inject<SignInUseCase>()
+class LoginViewModel @ViewModelInject constructor(
+    private val signInUseCase: SignInUseCase
+) : ViewModel() {
 
     private val authResultMutable = MutableLiveData<UiState<Unit>>()
     internal val authResult: LiveData<UiState<Unit>> = authResultMutable
