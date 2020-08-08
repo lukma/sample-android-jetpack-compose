@@ -28,6 +28,7 @@ import com.lukma.android.ui.theme.CleanTheme
 @Composable
 fun MainContent() {
     val navigation = NavigationHandlerAmbient.current
+
     launchInComposition {
         navigation.checkIsLoggedIn()
     }
@@ -40,75 +41,68 @@ fun MainContent() {
             when (navigation.currentScreen()) {
                 is Screen.Login -> LoginScreen()
                 is Screen.Capture -> CaptureScreen()
-                else -> AppScaffold()
+                else -> AppScaffold(navigation)
             }
         }
     }
 }
 
 @Composable
-fun AppScaffold() {
+private fun AppScaffold(navigation: NavigationHandler) {
     val scaffoldState = rememberScaffoldState()
     Scaffold(
         scaffoldState = scaffoldState,
-        bottomBar = { AppBottomBar() },
-        floatingActionButton = { AppFloatingActionButton() },
+        bottomBar = {
+            BottomAppBar {
+                IconButton(onClick = { navigation.navigateTo(Screen.Home) }) {
+                    val tint = animateTint(navigation.currentScreen() is Screen.Home)
+                    Icon(Icons.Filled.Home, tint = tint)
+                }
+                IconButton(onClick = { navigation.navigateTo(Screen.Explore) }) {
+                    val tint = animateTint(navigation.currentScreen() is Screen.Explore)
+                    Icon(Icons.Filled.Search, tint = tint)
+                }
+                IconButton(onClick = { navigation.navigateTo(Screen.Profile) }) {
+                    val tint = animateTint(navigation.currentScreen() is Screen.Profile)
+                    Icon(Icons.Filled.Face, tint = tint)
+                }
+            }
+        },
+        floatingActionButton = {
+            val permission = PermissionUtilsAmbient.current
+            FloatingActionButton(onClick = {
+                permission.runWithPermission(arrayOf(Manifest.permission.CAMERA)) {
+                    navigation.navigateTo(Screen.Capture)
+                }
+            }) {
+                Icon(asset = vectorResource(id = R.drawable.ic_twotone_camera_24))
+            }
+        },
         isFloatingActionButtonDocked = true,
-        bodyContent = { AppBody(Modifier.padding(bottom = it.bottom)) }
+        bodyContent = { innerPadding ->
+            Crossfade(
+                current = navigation.currentScreen(),
+                modifier = Modifier.padding(padding = innerPadding)
+            ) {
+                when (it) {
+                    is Screen.Home -> HomeScreen()
+                    is Screen.Explore -> ExploreScreen()
+                    is Screen.Profile -> ProfileScreen()
+                    else -> { /* do nothing */
+                    }
+                }
+            }
+        }
     )
 }
 
 @Composable
-fun AppFloatingActionButton() {
-    val permissionUtils = PermissionUtilsAmbient.current
-    val navigation = NavigationHandlerAmbient.current
-    FloatingActionButton(onClick = {
-        permissionUtils.runWithPermission(arrayOf(Manifest.permission.CAMERA)) {
-            navigation.navigateTo(Screen.Capture)
-        }
-    }) {
-        Icon(asset = vectorResource(id = R.drawable.ic_twotone_camera_24))
-    }
-}
-
-@Composable
-fun AppBottomBar() {
-    val navigation = NavigationHandlerAmbient.current
-    BottomAppBar {
-        IconButton(onClick = { navigation.navigateTo(Screen.Home) }) {
-            Icon(Icons.Filled.Home, tint = tintColor(navigation.currentScreen() is Screen.Home))
-        }
-        IconButton(onClick = { navigation.navigateTo(Screen.Explore) }) {
-            Icon(
-                Icons.Filled.Search,
-                tint = tintColor(navigation.currentScreen() is Screen.Explore)
-            )
-        }
-        IconButton(onClick = { navigation.navigateTo(Screen.Profile) }) {
-            Icon(Icons.Filled.Face, tint = tintColor(navigation.currentScreen() is Screen.Profile))
-        }
-    }
-}
-
-@Composable
-private fun tintColor(isSelected: Boolean) = if (isSelected) Color.White else Color.LightGray
-
-@Composable
-fun AppBody(modifier: Modifier) {
-    val navigation = NavigationHandlerAmbient.current
-    Crossfade(current = navigation.currentScreen(), modifier = modifier) {
-        when (it) {
-            is Screen.Home -> HomeScreen()
-            is Screen.Explore -> ExploreScreen()
-            is Screen.Profile -> ProfileScreen()
-        }
-    }
-}
+private fun animateTint(isSelected: Boolean) = if (isSelected) Color.White else Color.LightGray
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     CleanTheme {
-        AppScaffold()
+        MainContent()
     }
 }
