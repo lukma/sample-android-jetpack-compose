@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.lukma.android.common.UiState
-import com.lukma.android.domain.asUiState
+import com.lukma.android.common.asUiState
 import com.lukma.android.domain.post.usecase.CreatePostUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

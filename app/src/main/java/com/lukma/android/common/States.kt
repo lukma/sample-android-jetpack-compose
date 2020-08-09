@@ -1,6 +1,7 @@
 package com.lukma.android.common
 
 import androidx.compose.runtime.Composable
+import com.lukma.android.domain.Either
 
 sealed class UiState<out T> {
     object None : UiState<Nothing>()
@@ -15,3 +16,9 @@ fun <T> UiState<T>.onFailure(block: @Composable (Throwable) -> Unit) {
         block(error)
     }
 }
+
+inline val <T> Either<Throwable, T>.asUiState: UiState<T>
+    get() = when (this) {
+        is Either.Value -> UiState.Success(value)
+        is Either.Error -> UiState.Failure(error)
+    }

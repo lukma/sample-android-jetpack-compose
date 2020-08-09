@@ -6,11 +6,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lukma.android.common.UiState
+import com.lukma.android.common.asUiState
 import com.lukma.android.domain.account.Profile
 import com.lukma.android.domain.account.usecase.GetMyProfileUseCase
 import com.lukma.android.domain.account.usecase.SignOutUseCase
 import com.lukma.android.domain.account.usecase.UpdateMyProfileUseCase
-import com.lukma.android.domain.asUiState
 import com.lukma.android.domain.getOrNull
 import com.lukma.android.domain.isSuccess
 import kotlinx.coroutines.launch

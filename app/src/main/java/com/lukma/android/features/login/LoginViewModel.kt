@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lukma.android.common.UiState
-import com.lukma.android.domain.asUiState
+import com.lukma.android.common.asUiState
 import com.lukma.android.domain.auth.usecase.SignInUseCase
 import kotlinx.coroutines.launch
 
