@@ -11,6 +11,13 @@ sealed class UiState<out T> {
 }
 
 @Composable
+fun <T> UiState<T>.onSuccess(block: @Composable (T) -> Unit) {
+    if (this is UiState.Success) {
+        block(data)
+    }
+}
+
+@Composable
 fun <T> UiState<T>.onFailure(block: @Composable (Throwable) -> Unit) {
     if (this is UiState.Failure) {
         block(error)

@@ -4,13 +4,16 @@ import android.net.Uri
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
-import com.lukma.android.common.uploadFile
+import com.lukma.android.common.uploadFileWithProgress
 import com.lukma.android.domain.post.Post
 import com.lukma.android.domain.post.PostRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import com.lukma.android.domain.post.PostUploadInfo
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.tasks.await
 import java.io.File
 
@@ -33,35 +36,60 @@ class PostRepositoryImpl(
         .documents
         .mapNotNull { transform(it) }
 
-    override suspend fun createPost(post: Post) {
+    @ExperimentalCoroutinesApi
+    override suspend fun createPost(post: Post): Flow<PostUploadInfo> = channelFlow {
         val author = post.author.let(::transform)
 
         val destination = "posts/${post.author.uid}"
-        val postToAdd: Any = when (post) {
+        when (post) {
             is Post.Image -> {
-                val url =
-                    firebaseStorage.uploadFile(Uri.fromFile(File(post.url)), destination).toString()
-                PostImageData(
-                    type = "image",
-                    url = url,
-                    author = author
-                )
+                firebaseStorage.uploadFileWithProgress(Uri.fromFile(File(post.url)), destination)
+                    .collectLatest {
+                        if (it.first != null) {
+                            val postToAdd = PostImageData(
+                                type = "image",
+                                url = it.first.toString(),
+                                author = author
+                            )
+                            postsCollection.add(postToAdd).await()
+                        }
+                        sendBlocking(PostUploadInfo(it.second))
+                    }
             }
             is Post.Video -> {
-                val url =
-                    firebaseStorage.uploadFile(Uri.fromFile(File(post.url)), destination).toString()
-                val thumbnail =
-                    firebaseStorage.uploadFile(Uri.fromFile(File(post.thumbnail)), destination)
-                        .toString()
-                PostVideoData(
-                    type = "video",
-                    url = url,
-                    thumbnail = thumbnail,
-                    author = author
+                var videoUploadInfo: Pair<Uri?, Double> = Pair(null, 0.0)
+                var thumbnailUploadInfo: Pair<Uri?, Double> = Pair(null, 0.0)
+
+                firebaseStorage.uploadFileWithProgress(Uri.fromFile(File(post.url)), destination)
+                    .collectLatest {
+                        videoUploadInfo = it
+                        val progress = (videoUploadInfo.second + thumbnailUploadInfo.second) / 2
+                        sendBlocking(PostUploadInfo(progress))
+                    }
+
+                firebaseStorage.uploadFileWithProgress(
+                    Uri.fromFile(File(post.thumbnail)),
+                    destination
                 )
+                    .collectLatest {
+                        thumbnailUploadInfo = it
+                        val progress = (videoUploadInfo.second + thumbnailUploadInfo.second) / 2
+                        sendBlocking(PostUploadInfo(progress))
+                    }
+
+                while (videoUploadInfo.first != null && thumbnailUploadInfo.first != null) {
+                    val postToAdd = PostVideoData(
+                        type = "video",
+                        url = videoUploadInfo.first.toString(),
+                        thumbnail = thumbnailUploadInfo.first.toString(),
+                        author = author
+                    )
+                    postsCollection.add(postToAdd).await()
+                }
             }
         }
-        postsCollection.add(postToAdd).await()
+
+        awaitClose { }
     }
 
     override suspend fun updatePostAuthor(author: Post.Author) {

@@ -6,10 +6,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Providers
 import androidx.compose.ui.platform.setContent
-import com.lukma.android.common.ActivityResultHandler
-import com.lukma.android.common.ActivityResultHandlerAmbient
-import com.lukma.android.common.PermissionUtils
-import com.lukma.android.common.PermissionUtilsAmbient
+import com.lukma.android.common.*
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -29,11 +26,13 @@ class MainActivity : AppCompatActivity() {
             onNavigateTo = navigationViewModel::navigateTo,
             onCheckIsLoggedIn = navigationViewModel::checkIsLoggedIn
         )
+        val workerWatcher = WorkerWatcher(this)
         setContent {
             Providers(
                 NavigationHandlerAmbient provides navigationHandler,
                 PermissionUtilsAmbient provides permissionUtils,
-                ActivityResultHandlerAmbient provides activityResultHandler
+                ActivityResultHandlerAmbient provides activityResultHandler,
+                WorkerWatcherAmbient provides workerWatcher
             ) {
                 MainContent()
             }

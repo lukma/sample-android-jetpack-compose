@@ -2,8 +2,6 @@ package com.lukma.android.features.capture
 
 import android.view.LayoutInflater
 import android.widget.FrameLayout
-import androidx.camera.core.*
-import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Box
 import androidx.compose.foundation.ContentGravity
@@ -29,71 +27,60 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.viewinterop.viewModel
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.LifecycleOwner
+import androidx.ui.tooling.preview.Preview
+import androidx.work.WorkInfo
 import com.lukma.android.R
-import com.lukma.android.common.UiState
-import com.lukma.android.common.createFile
-import com.lukma.android.common.getOutputDirectory
-import com.lukma.android.common.onFailure
+import com.lukma.android.common.*
 import com.lukma.android.common.ui.DelayedSnackbar
 import com.lukma.android.ui.NavigationHandlerAmbient
 import com.lukma.android.ui.Screen
 import com.lukma.android.ui.theme.CleanTheme
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-
-private var viewFinder: PreviewView? = null
-private var cameraProvider: ProcessCameraProvider? = null
-private var lensFacing: Int? = null
-private var imageCapture: ImageCapture? = null
-private var camera: Camera? = null
-private var cameraExecutor: ExecutorService? = null
+import com.lukma.android.worker.UploadPostWork
 
 @Composable
 fun CaptureScreen() {
     val context = ContextAmbient.current
     val lifecycleOwner = LifecycleOwnerAmbient.current
+    val workerWatcher = WorkerWatcherAmbient.current
+
+    val cameraHandler = CameraHandler(lifecycleOwner)
+
+    var isRunning = false
+    workerWatcher.watch(UploadPostWork.TAG)
+    workerWatcher.workInfo?.let { workInfo ->
+        val workInfoState by workInfo.observeAsState()
+        isRunning = workInfoState?.state == WorkInfo.State.RUNNING
+    }
 
     val viewModel = viewModel<CaptureViewModel>()
     val createPostState by viewModel.createPostResult.observeAsState(initial = UiState.None)
 
-    if (createPostState is UiState.Success) {
+    createPostState.onSuccess { filePath ->
+        UploadPostWork.start(context = context, filePath = filePath)
+
         val navigation = NavigationHandlerAmbient.current
-        navigation.navigateTo(Screen.Home).also { viewModel.clearState() }
+        navigation.navigateTo(Screen.Home)
     }
 
     launchInComposition {
-        lensFacing = CameraSelector.LENS_FACING_BACK
-        cameraExecutor = Executors.newSingleThreadExecutor()
+        cameraHandler.prepare()
     }
 
     ConstraintLayout(Modifier.fillMaxSize()) {
         val (captureButton, flipButton, flashButton, errorMessage) = createRefs()
 
-        CameraPreview(lifecycleOwner = lifecycleOwner, modifier = Modifier.fillMaxSize())
+        CameraPreview(cameraHandler = cameraHandler, modifier = Modifier.fillMaxSize())
         FloatingActionButton(
             onClick = {
-                val imageCapture = imageCapture ?: return@FloatingActionButton
-                val cameraExecutor = cameraExecutor ?: return@FloatingActionButton
-
-                val outputDirectory = getOutputDirectory(context)
-                val file = createFile(outputDirectory, ".jpg")
-                val outputOptions = ImageCapture.OutputFileOptions.Builder(file)
-                    .build()
-
-                imageCapture.takePicture(
-                    outputOptions,
-                    cameraExecutor,
-                    object : ImageCapture.OnImageSavedCallback {
-                        override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                            viewModel.createPost(file.path)
-                        }
-
-                        override fun onError(exception: ImageCaptureException) {
-                            viewModel.takePictureFailed()
-                        }
-                    })
+                if (!isRunning) {
+                    cameraHandler.takePicture(
+                        context = context,
+                        onSuccess = viewModel::prepareCreatePost,
+                        onError = viewModel::takePictureFailed
+                    )
+                } else {
+                    viewModel.prevUploadIncomplete()
+                }
             },
             modifier = Modifier.constrainAs(captureButton) {
                 bottom.linkTo(parent.bottom, margin = 16.dp)
@@ -103,27 +90,21 @@ fun CaptureScreen() {
             backgroundColor = Color.White
         ) { }
 
-        val isBackCamera = savedInstanceState { true }
+        val isBackCamera = savedInstanceState { cameraHandler.isBackCamera }
         IconButton(onClick = {
-            if (!isBackCamera.value) {
-                lensFacing = CameraSelector.LENS_FACING_BACK
-                isBackCamera.value = true
-            } else if (cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) == true) {
-                lensFacing = CameraSelector.LENS_FACING_FRONT
-                isBackCamera.value = false
+            isBackCamera.value = if (!isBackCamera.value) {
+                true
+            } else {
+                !cameraHandler.isSupportFrontCamera()
             }
 
-            setUpCamera(lifecycleOwner)
+            cameraHandler.isBackCamera = isBackCamera.value
         }, modifier = Modifier.constrainAs(flipButton) {
             bottom.linkTo(captureButton.bottom)
             end.linkTo(captureButton.start, margin = 8.dp)
             top.linkTo(captureButton.top)
         }) {
-            val tint = if (cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) == true) {
-                Color.White
-            } else {
-                Color.LightGray
-            }
+            val tint = if (cameraHandler.isSupportFrontCamera()) Color.White else Color.LightGray
             Icon(
                 asset = vectorResource(id = R.drawable.ic_twotone_flip_camera_android_24),
                 tint = tint
@@ -133,14 +114,19 @@ fun CaptureScreen() {
         val isFlashOff = savedInstanceState { true }
         IconButton(onClick = {
             isFlashOff.value = !isFlashOff.value
-            camera?.cameraControl?.enableTorch(isFlashOff.value)
+            cameraHandler.isTorchEnable = isFlashOff.value
         }, modifier = Modifier.constrainAs(flashButton) {
             bottom.linkTo(captureButton.bottom)
             start.linkTo(captureButton.end, margin = 8.dp)
             top.linkTo(captureButton.top)
         }) {
+            val assetId = if (isFlashOff.value) {
+                R.drawable.ic_twotone_flash_off_24
+            } else {
+                R.drawable.ic_twotone_flash_on_24
+            }
             Icon(
-                asset = vectorResource(id = if (isFlashOff.value) R.drawable.ic_twotone_flash_off_24 else R.drawable.ic_twotone_flash_on_24),
+                asset = vectorResource(id = assetId),
                 tint = Color.White
             )
         }
@@ -165,60 +151,22 @@ fun CaptureScreen() {
     }
 
     onDispose {
-        viewFinder = null
-        cameraProvider = null
-        lensFacing = null
-        imageCapture = null
-        cameraExecutor?.shutdown()
-        camera = null
-        cameraExecutor = null
+        viewModel.clearState()
+        cameraHandler.destroy()
     }
 }
 
 @Composable
-fun CameraPreview(lifecycleOwner: LifecycleOwner, modifier: Modifier) {
+fun CameraPreview(cameraHandler: CameraHandler, modifier: Modifier) {
     AndroidView(viewBlock = {
         LayoutInflater.from(it).inflate(R.layout.camera_preview, FrameLayout(it), false)
     }, modifier = modifier) {
         val view = it.findViewById<PreviewView>(R.id.viewFinder)
-        viewFinder = view
-        viewFinder?.post {
-            setUpCamera(lifecycleOwner)
-        }
+        cameraHandler.setup(view)
     }
 }
 
-private fun setUpCamera(lifecycleOwner: LifecycleOwner) {
-    val viewFinder = viewFinder ?: return
-    val cameraProviderFuture = ProcessCameraProvider.getInstance(viewFinder.context)
-    cameraProviderFuture.addListener({
-        cameraProvider = cameraProviderFuture.get()
-
-        val cameraSelector = CameraSelector.Builder()
-            .requireLensFacing(lensFacing ?: CameraSelector.LENS_FACING_BACK)
-            .build()
-
-        val cameraPreview = Preview.Builder()
-            .build()
-
-        imageCapture = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            .build()
-
-        runCatching {
-            cameraProvider?.unbindAll()
-            camera = cameraProvider?.bindToLifecycle(
-                lifecycleOwner,
-                cameraSelector,
-                cameraPreview,
-                imageCapture
-            )
-            cameraPreview.setSurfaceProvider(viewFinder.createSurfaceProvider())
-        }
-    }, ContextCompat.getMainExecutor(viewFinder.context))
-}
-
-@androidx.ui.tooling.preview.Preview(showBackground = true)
+@Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     CleanTheme {

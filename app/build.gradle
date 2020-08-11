@@ -64,7 +64,11 @@ dependencies {
 
     def hilt_integrations_version = "1.0.0-alpha02"
     implementation "androidx.hilt:hilt-lifecycle-viewmodel:$hilt_integrations_version"
+    implementation "androidx.hilt:hilt-work:$hilt_integrations_version"
     kapt "androidx.hilt:hilt-compiler:$hilt_integrations_version"
+
+    def work_version = "2.4.0"
+    implementation "androidx.work:work-runtime-ktx:$work_version"
 
     implementation "com.facebook.shimmer:shimmer:0.5.0"
     implementation "com.github.bumptech.glide:glide:4.11.0"

@@ -4,14 +4,16 @@ import com.lukma.android.domain.BaseUseCase
 import com.lukma.android.domain.account.AccountRepository
 import com.lukma.android.domain.post.Post
 import com.lukma.android.domain.post.PostRepository
+import com.lukma.android.domain.post.PostUploadInfo
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
 class CreatePostUseCase @Inject constructor(
     private val postRepository: PostRepository,
     private val accountRepository: AccountRepository
-) : BaseUseCase<Unit>() {
+) : BaseUseCase<Flow<PostUploadInfo>>() {
 
     fun addParams(url: String) = apply {
         val params = mapOf(
@@ -32,7 +34,7 @@ class CreatePostUseCase @Inject constructor(
 
     override val coroutineContext: CoroutineContext = Dispatchers.IO
 
-    override suspend fun build() {
+    override suspend fun build(): Flow<PostUploadInfo> {
         val myProfile = accountRepository.getMyProfile()
         val author = Post.Author(
             uid = myProfile.uid,
