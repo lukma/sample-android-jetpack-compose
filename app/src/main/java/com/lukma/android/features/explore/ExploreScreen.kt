@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.viewModel
 import androidx.ui.tooling.preview.Preview
 import com.lukma.android.common.UiState
+import com.lukma.android.common.ui.GlideImage
 import com.lukma.android.common.ui.GridItems
-import com.lukma.android.common.ui.Image
 import com.lukma.android.common.ui.Shimmer
 import com.lukma.android.domain.post.Post
 import com.lukma.android.ui.theme.CleanTheme
@@ -74,12 +74,12 @@ private fun PostList(posts: List<Post>) {
 private fun PostItem(post: Post) {
     Card(modifier = Modifier.aspectRatio(1f).weight(1f)) {
         when (post) {
-            is Post.Image -> Image(
+            is Post.Image -> GlideImage(
                 url = post.url,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
-            is Post.Video -> Image(
+            is Post.Video -> GlideImage(
                 url = post.thumbnail,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop

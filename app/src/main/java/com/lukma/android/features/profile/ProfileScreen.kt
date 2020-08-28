@@ -32,7 +32,7 @@ import androidx.ui.tooling.preview.Preview
 import com.lukma.android.BuildConfig
 import com.lukma.android.R
 import com.lukma.android.common.*
-import com.lukma.android.common.ui.Image
+import com.lukma.android.common.ui.GlideImage
 import com.lukma.android.ui.NavigationHandlerAmbient
 import com.lukma.android.ui.theme.CleanTheme
 
@@ -76,7 +76,7 @@ fun ProfileScreen() {
                     )
                 }
             )
-            Image(
+            GlideImage(
                 url = myProfileState?.photo ?: "",
                 modifier = Modifier
                     .clip(CircleShape)

@@ -22,7 +22,7 @@ import androidx.ui.tooling.preview.Preview
 import androidx.work.WorkInfo
 import com.lukma.android.common.UiState
 import com.lukma.android.common.WorkerWatcherAmbient
-import com.lukma.android.common.ui.Image
+import com.lukma.android.common.ui.GlideImage
 import com.lukma.android.common.ui.Shimmer
 import com.lukma.android.common.ui.VideoPlayer
 import com.lukma.android.domain.post.Post
@@ -113,7 +113,7 @@ private fun NewPostUploadInfo() {
                 ) {
                     ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
                         val (photoImage, progressView) = createRefs()
-                        Image(url = filePath ?: "", modifier = Modifier.constrainAs(photoImage) {
+                        GlideImage(url = filePath ?: "", modifier = Modifier.constrainAs(photoImage) {
                             start.linkTo(parent.start)
                             top.linkTo(parent.top)
                             width = Dimension.value(50.dp)
@@ -154,7 +154,7 @@ private fun PostItem(post: Post) {
                 height = Dimension.value(500.dp)
             }
             when (post) {
-                is Post.Image -> Image(
+                is Post.Image -> GlideImage(
                     url = post.url,
                     modifier = contentModifier,
                     contentScale = ContentScale.Crop
@@ -164,7 +164,7 @@ private fun PostItem(post: Post) {
                     modifier = contentModifier
                 )
             }
-            Image(
+            GlideImage(
                 url = post.author.photo ?: "",
                 modifier = Modifier.clip(CircleShape).constrainAs(authorPhotoImage) {
                     start.linkTo(parent.start, margin = 8.dp)

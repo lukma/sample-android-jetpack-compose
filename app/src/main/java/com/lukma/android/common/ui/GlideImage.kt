@@ -3,6 +3,7 @@ package com.lukma.android.common.ui
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Box
+import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -22,7 +23,7 @@ import com.lukma.android.R
 import com.lukma.android.common.UiState
 
 @Composable
-fun Image(
+fun GlideImage(
     url: String,
     modifier: Modifier = Modifier,
     alignment: Alignment = Alignment.Center,
@@ -34,7 +35,7 @@ fun Image(
 ) {
     when (val state = loadImageUrl(url)) {
         is UiState.Loading -> onLoading()
-        is UiState.Success -> androidx.compose.foundation.Image(
+        is UiState.Success -> Image(
             asset = state.data.asImageAsset(),
             modifier = modifier,
             alignment = alignment,
@@ -47,12 +48,12 @@ fun Image(
 }
 
 @Composable
-fun DefaultImageUrlLoading(modifier: Modifier) {
+private fun DefaultImageUrlLoading(modifier: Modifier) {
     LoopAnimation(raw = R.raw.image_loading, modifier = modifier)
 }
 
 @Composable
-fun DefaultImageUrlError(modifier: Modifier) {
+private fun DefaultImageUrlError(modifier: Modifier) {
     Box(
         modifier = modifier,
         backgroundColor = Color.Gray
@@ -60,7 +61,7 @@ fun DefaultImageUrlError(modifier: Modifier) {
 }
 
 @Composable
-fun loadImageUrl(url: String): UiState<Bitmap> {
+private fun loadImageUrl(url: String): UiState<Bitmap> {
     var bitmapState: UiState<Bitmap> by state { UiState.Loading }
 
     Glide.with(ContextAmbient.current)
@@ -74,7 +75,7 @@ fun loadImageUrl(url: String): UiState<Bitmap> {
             override fun onLoadCleared(placeholder: Drawable?) {}
 
             override fun onLoadFailed(errorDrawable: Drawable?) {
-                val error = Exception("Fail to load image")
+                val error = Exception()
                 bitmapState = UiState.Failure(error)
             }
         })
